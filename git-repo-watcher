@@ -167,7 +167,7 @@ while true; do
     elif [[ "$git_local" == "$git_base" ]]; then
         hook "pull_change" "$repo_name" "$branch"
     elif [[ "$git_remote" == "$git_base" ]]; then
-        hook "local_change" "$repo_name" "$branch"
+        hook "local_change" "$git_repository_dir" "$script_dir" "$repo_name" "$branch"
     else
         hook "diverged" "$repo_name" "$branch"
     fi

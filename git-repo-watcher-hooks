@@ -41,8 +41,9 @@ upstream_not_set() {
 }
 
 # $1 - Git repository name
-# $2 - Branch name
+# $2 - Script dir
 local_change() {
+    cd "$2" && node ./check-changes.js
     echo "local file changed: $*"
 }
 
