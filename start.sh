@@ -1,1 +1,1 @@
-./git-repo-watcher -d /home/cvasquez/obsidian/workspace
+node git-repo-watcher.js -d /home/cvasquez/obsidian/workspace

@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/cristianvasquez/vault-watcher/issues"
   },
-  "homepage": "https://github.com/cristianvasquez/vault-watcher#readme"
+  "homepage": "https://github.com/cristianvasquez/vault-watcher#readme",
+  "dependencies": {
+    "minimist": "^1.2.8"
+  }
 }

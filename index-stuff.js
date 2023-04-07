@@ -4,7 +4,11 @@ function indexStuff ({ created, modified, deleted }) {
   console.log(`Created files:\n${created.join('\n')}`)
   console.log(`Modified files:\n${modified.join('\n')}`)
   console.log(`Deleted files:\n${deleted.join('\n')}`)
-  throw Error('Not implemented')
+  // throw Error('Not implemented')
 }
 
-export { indexStuff }
+function indexAll ({ vaultPath }) {
+  console.log('Indexing all ', vaultPath)
+}
+
+export { indexStuff, indexAll }
