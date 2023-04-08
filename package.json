@@ -18,6 +18,10 @@
   },
   "homepage": "https://github.com/cristianvasquez/vault-watcher#readme",
   "dependencies": {
-    "minimist": "^1.2.8"
+    "minimist": "^1.2.8",
+    "n3": "^1.16.4",
+    "rdf-ext": "^2.2.0",
+    "sparql-http-client": "^2.4.2",
+    "vault-triplifier": "^0.4.4"
   }
 }

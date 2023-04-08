@@ -1,31 +1,32 @@
 import fs from 'fs'
 import { exec } from 'child_process'
-import { indexAll, indexStuff } from './index-stuff.js'
+import { indexAll, updateIndex } from './index-stuff.js'
 
 /**
  * Stuff below was written by ChatGPT and modified by me
  */
-function indexBySha ({ vaultPath, repoPath, shaFilePath }) {
+async function indexBySha ({ vaultPath, repoPath, shaFilePath }) {
   try {
     const currentSha = fs.readFileSync(shaFilePath, 'utf8').trim()
-    checkChanges({ currentSha, shaFilePath, repoPath })
+    await checkChanges({ vaultPath, repoPath, currentSha, shaFilePath })
   } catch (err) {
     console.log('Init SHA')
-    exec(`git rev-parse HEAD`, { cwd: repoPath }, (err, stdout, stderr) => {
-      if (err) {
-        console.error(`Error getting SHA: ${err}`)
-        return
-      }
-      indexAll({ vaultPath })
-      const newSha = stdout.trim()
-      fs.writeFileSync(shaFilePath, newSha, 'utf8')
-    })
+    exec(`git rev-parse HEAD`, { cwd: repoPath },
+      async (err, stdout, stderr) => {
+        if (err) {
+          console.error(`Error getting SHA: ${err}`)
+          return
+        }
+        await indexAll({ vaultPath })
+        const newSha = stdout.trim()
+        fs.writeFileSync(shaFilePath, newSha, 'utf8')
+      })
   }
 }
 
 // Read the current SHA from the file, or set it to the first SHA of the repository if the file doesn't exist
 
-function checkChanges ({ currentSha, shaFilePath, repoPath }) {
+function checkChanges ({ vaultPath, repoPath, currentSha, shaFilePath }) {
 
 // Get the SHA of the latest commit
   exec(`git rev-parse HEAD`, { cwd: repoPath }, (err, stdout, stderr) => {
@@ -40,35 +41,48 @@ function checkChanges ({ currentSha, shaFilePath, repoPath }) {
     if (newSha !== currentSha) {
       console.log(`New commit detected: ${newSha}`)
 
-      exec(`git diff --name-status ${currentSha} ${newSha}`, { cwd: repoPath },
-        (err, stdout, stderr) => {
+      exec(
+        `git -c core.quotepath=false diff --name-status ${currentSha} ${newSha}`,
+        { cwd: repoPath }, async (err, stdout, stderr) => {
           if (err) {
             console.error(`Error getting diff: ${err}`)
             return
           }
+          console.log(stdout)
 
           const changes = stdout.trim().split('\n')
+
           const created = []
           const modified = []
           const deleted = []
           changes.forEach(change => {
-            const [status, file] = change.split('\t')
+            const [status, ...paths] = change.split('\t')
+
             switch (status) {
               case 'A':
-                created.push(file)
+                created.push(paths[0])
                 break
               case 'M':
-                modified.push(file)
+                modified.push(paths[0])
                 break
               case 'D':
-                deleted.push(file)
+                deleted.push(paths[0])
                 break
               default:
-                console.warn(`Unknown change status: ${status}`)
+                if (status.startsWith('R')) {
+                  deleted.push(paths[0])
+                  if (!paths[1].startsWith('.trash')) {
+                    created.push(paths[1])
+                  }
+                } else {
+                  console.warn(`Unknown change status: ${status}`)
+                }
             }
           })
           try {
-            indexStuff({ created, modified, deleted })
+            await updateIndex({
+              vaultPath, created: created, modified: modified, deleted: deleted,
+            })
             console.log('writing sha', newSha)
             fs.writeFileSync(shaFilePath, newSha, 'utf8')
           } catch (error) {
@@ -80,3 +94,4 @@ function checkChanges ({ currentSha, shaFilePath, repoPath }) {
 }
 
 export { indexBySha }
+
