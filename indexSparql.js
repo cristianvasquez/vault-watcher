@@ -1,8 +1,8 @@
-import { createClient } from './sparql.js'
 import { readFile } from 'fs/promises'
 import { resolve } from 'path'
 import { createTriplifier } from 'vault-triplifier'
 import ns from 'vault-triplifier/src/namespaces.js'
+import { createClient } from './sparqlClient.js'
 
 const client = createClient()
 
@@ -17,6 +17,10 @@ const triplifyOptions = {
   },
 }
 
+async function canIndex () {
+  return await client.doAsk()
+}
+
 async function updateTriplestore ({ triplifier, vaultPath, file }) {
   const text = await readFile(resolve(vaultPath, file), 'utf8')
   const pointer = triplifier.toRDF(text, { path: file }, triplifyOptions)
@@ -29,18 +33,7 @@ async function updateTriplestore ({ triplifier, vaultPath, file }) {
   }
 }
 
-async function indexAll ({ vaultPath }) {
-  console.log('Indexing all ', vaultPath)
-  const triplifier = await createTriplifier(vaultPath)
-
-  for (const file of [
-    ...triplifier.getMarkdownFiles(), ...triplifier.getCanvasFiles()]) {
-    await updateTriplestore({ triplifier, vaultPath, file })
-  }
-}
-
-async function updateIndex ({ vaultPath, created, modified, deleted }) {
-
+async function updateChanges ({ vaultPath, created, modified, deleted }) {
   console.log(
     `Index ${created.length} created files, ${modified.length} modified files, and ${deleted.length} deleted files:`)
 
@@ -55,4 +48,14 @@ async function updateIndex ({ vaultPath, created, modified, deleted }) {
   }
 }
 
-export { updateIndex, indexAll }
+async function updateAll ({ vaultPath }) {
+  console.log('Indexing all ', vaultPath)
+  const triplifier = await createTriplifier(vaultPath)
+
+  for (const file of [
+    ...triplifier.getMarkdownFiles(), ...triplifier.getCanvasFiles()]) {
+    await updateTriplestore({ triplifier, vaultPath, file })
+  }
+}
+
+export { updateChanges, updateAll, canIndex }

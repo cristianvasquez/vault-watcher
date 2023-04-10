@@ -1,32 +1,38 @@
 import fs from 'fs'
 import { exec } from 'child_process'
-import { indexAll, updateIndex } from './index-stuff.js'
+import * as sparqlIndexer from './indexSparql.js'
 
 /**
- * Stuff below was written by ChatGPT and modified by me
+ * Stuff below was written by ChatGPT
  */
-async function indexBySha ({ vaultPath, repoPath, shaFilePath }) {
-  try {
-    const currentSha = fs.readFileSync(shaFilePath, 'utf8').trim()
-    await checkChanges({ vaultPath, repoPath, currentSha, shaFilePath })
-  } catch (err) {
-    console.log('Init SHA')
-    exec(`git rev-parse HEAD`, { cwd: repoPath },
-      async (err, stdout, stderr) => {
-        if (err) {
-          console.error(`Error getting SHA: ${err}`)
-          return
-        }
-        await indexAll({ vaultPath })
-        const newSha = stdout.trim()
-        fs.writeFileSync(shaFilePath, newSha, 'utf8')
-      })
+async function updateLast ({ vaultPath, repoPath, shaFilePath }) {
+
+  if (await sparqlIndexer.canIndex()) {
+    try {
+      const currentSha = fs.readFileSync(shaFilePath, 'utf8').trim()
+      await update({ vaultPath, repoPath, currentSha, shaFilePath },
+        sparqlIndexer.updateChanges)
+    } catch (err) {
+      console.log('Init SHA')
+      exec(`git rev-parse HEAD`, { cwd: repoPath },
+        async (err, stdout, stderr) => {
+          if (err) {
+            console.error(`Error getting SHA: ${err}`)
+            return
+          }
+          await sparqlIndexer.updateAll({ vaultPath })
+          const newSha = stdout.trim()
+          fs.writeFileSync(shaFilePath, newSha, 'utf8')
+        })
+    }
   }
+
 }
 
 // Read the current SHA from the file, or set it to the first SHA of the repository if the file doesn't exist
 
-function checkChanges ({ vaultPath, repoPath, currentSha, shaFilePath }) {
+function update (
+  { vaultPath, repoPath, currentSha, shaFilePath }, updateChanges) {
 
 // Get the SHA of the latest commit
   exec(`git rev-parse HEAD`, { cwd: repoPath }, (err, stdout, stderr) => {
@@ -80,7 +86,7 @@ function checkChanges ({ vaultPath, repoPath, currentSha, shaFilePath }) {
             }
           })
           try {
-            await updateIndex({
+            await updateChanges({
               vaultPath, created: created, modified: modified, deleted: deleted,
             })
             console.log('writing sha', newSha)
@@ -93,5 +99,5 @@ function checkChanges ({ vaultPath, repoPath, currentSha, shaFilePath }) {
   })
 }
 
-export { indexBySha }
+export { updateLast }
 

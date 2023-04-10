@@ -4,19 +4,9 @@ import { resolve } from 'path'
 import rdf from 'rdf-ext'
 
 import StreamClient from 'sparql-http-client/StreamClient.js'
+import { sparqlConfig } from './config.js'
 
-const appConfig = {
-  endpointUrl: process.env.SPARQL_ENDPOINT_URL ||
-    'http://localhost:3030/obsidian',
-  updateUrl: process.env.SPARQL_ENDPOINT_URL ||
-    'http://localhost:3030/obsidian',
-  storeUrl: process.env.SPARQL_ENDPOINT_URL || 'http://localhost:3030/obsidian',
-  user: process.env.SPARQL_USER || 'public',
-  password: process.env.SPARQL_PASSWORD || 'public',
-  factory: rdf,
-}
-
-const client = new StreamClient(appConfig)
+const client = new StreamClient(sparqlConfig)
 
 async function put ({ dataset, namedGraph }) {
   if (!namedGraph) {
@@ -37,7 +27,6 @@ async function deleteGraph ({ namedGraph }) {
   if (!namedGraph) {
     throw Error('Requires namedGraph')
   }
-
   const deleteAll = `DELETE {
   GRAPH <${namedGraph.value}> {
     ?s ?p ?o .
@@ -52,6 +41,14 @@ WHERE {
   return await client.query.update(deleteAll)
 }
 
+async function doAsk () {
+  return await client.query.ask(`ASK
+WHERE {
+  ?s ?p ?o .
+}
+`)
+}
+
 function createClient () {
   return {
     loadData: async ({ dataset, namedGraph }) => {
@@ -62,7 +59,7 @@ function createClient () {
       const parser = new Parser({ factory: rdf })
       const dataset = rdf.dataset().addAll(parser.parse(str))
       await put({ dataset, namedGraph })
-    }, deleteGraph,
+    }, deleteGraph, doAsk,
   }
 }
 
