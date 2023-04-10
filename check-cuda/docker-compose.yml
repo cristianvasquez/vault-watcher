@@ -1,0 +1,6 @@
+version: '3'
+services:
+  your_service_name:
+    image: nvidia/cuda:11.6.2-base-ubuntu20.04
+    command: nvidia-smi
+    runtime: nvidia

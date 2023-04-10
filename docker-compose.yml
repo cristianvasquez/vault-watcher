@@ -15,6 +15,7 @@ services:
       CLUSTER_HOSTNAME: 'node1'
   t2v-transformers:
     image: semitechnologies/transformers-inference:sentence-transformers-msmarco-distilroberta-base-v2
+    runtime: nvidia
     environment:
       ENABLE_CUDA: 1
       NVIDIA_VISIBLE_DEVICES: all # enable if running with CUDA
