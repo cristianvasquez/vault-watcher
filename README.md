@@ -1,3 +1,3 @@
 # Vault watcher
 
-Watches the vault for new commits to index the changes.
+Some one-shot utilities to index notes
