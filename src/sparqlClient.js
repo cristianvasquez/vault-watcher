@@ -4,7 +4,7 @@ import { resolve } from 'path'
 import rdf from 'rdf-ext'
 
 import StreamClient from 'sparql-http-client/StreamClient.js'
-import { sparqlConfig } from './config.js'
+import { sparqlConfig } from '../config.js'
 
 const client = new StreamClient(sparqlConfig)
 
